@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+service TableManagementService {
+    rpc GetTables(Empty) returns (GetTablesResponse) {}
+    rpc BookSeat(BookSeatRequest) returns (BookSeatResponse) {}
+    rpc CancelSeat (CancelSeatRequest) returns (CancelSeatResponse) {}
+    rpc CheckIn (CheckInRequest) returns (CheckInResponse) {}
+    rpc VerifyCheckIn (VerifyCheckInRequest) returns (VerifyCheckInResponse) {}
+    rpc CheckOut (CheckOutRequest) returns (CheckOutResponse) {}
+    rpc DeleteLateTables (Empty) returns (DeleteLateTablesResponse) {}
+}
+
+enum TABLE_STATUS {
+    AVAILABLE = 1;
+    RESERVED = 2;
+    FULL = 3;
+}
+
+message Empty{}
+
+message Seat {
+    string tableId = 1;
+    int32 label = 2; 
+    int32 size = 3 ; 
+    TABLE_STATUS status = 4 ; 
+    string createdAt = 5 ; 
+    string userId = 6 ; 
+}
+
+message GetTablesResponse {
+    repeated Seat tables = 1; 
+}
+
+message BookSeatRequest {
+    string userId = 1 ; 
+    string tableId = 2 ; 
+}
+
+message BookSeatResponse {
+    string tableId = 1 ; 
+    int32 label = 2 ; 
+    int32 size = 3 ; 
+    TABLE_STATUS status = 4 ; 
+}
+
+message CancelSeatRequest {
+    string userId = 1 ; 
+    string tableId = 2 ; 
+}
+
+message CancelSeatResponse {
+    string tableId = 1 ; 
+    int32 label = 2 ; 
+    int32 size = 3 ; 
+    TABLE_STATUS status = 4 ; 
+}
+
+message CheckInRequest {
+    string userId = 1 ; 
+    string tableId = 2 ; 
+}
+
+message CheckInResponse {
+    string userId = 1; 
+    int32 requestId = 2; 
+    string tableId =3; 
+    string createdAt = 4; 
+}
+
+message CheckOutRequest {
+    string tableId = 1 ; 
+}
+
+message CheckOutResponse {
+    string tableId = 1; 
+    TABLE_STATUS status = 2; 
+}
+
+message VerifyCheckInRequest {
+    int32 requestId = 1 ;
+}
+
+message VerifyCheckInResponse {
+    string tableId = 1 ; 
+    TABLE_STATUS status = 2 ; 
+}
+
+message DeleteLateTablesResponse {
+    repeated Seat tables = 1 ; 
+}
+
+
+
+
