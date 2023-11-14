@@ -11,7 +11,9 @@ const envConfig = {
     db_port: process.env.DB_PORT,
     port: process.env.PORT,
     host: process.env.HOST,
-    jwt_secret: process.env.JWT_SECRET
+    jwt_secret: process.env.JWT_SECRET,
+    user_service_host: process.env.USER_SERVICE_HOST,
+    user_service_port: process.env.USER_SERVICE_PORT,
 }
 
 export default envConfig;

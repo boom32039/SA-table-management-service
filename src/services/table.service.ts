@@ -82,7 +82,7 @@ export default class TableService {
         if (currentHour >= 21) {
             await this.tableRepository.createQueryBuilder()
             .update(Table)
-            .set({ status: TABLE_STATUS.AVAILABLE })
+            .set({ status: TABLE_STATUS.AVAILABLE, userId:"" })
             .where("status = :status", {status:TABLE_STATUS.RESERVED })
             .execute()
         };

@@ -1,5 +1,5 @@
 import TableService  from "../services/table.service"
-import {TABLE_STATUS} from '../repositories/entity/table.entitiy'
+import {TABLE_STATUS, Table} from '../repositories/entity/table.entitiy'
 import {CheckIn} from '../repositories/entity/checkInRequest.entity'
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -15,6 +15,8 @@ import {
   VerifyCheckInResponse,CheckOutRequest,
   CheckOutResponse} from '../interfaces/table.interface'
   let grpc = require("@grpc/grpc-js");
+import axios from "axios"
+import config from "../config/config";
 export default class TableController {
   private tableService : TableService;
 
@@ -128,6 +130,40 @@ export default class TableController {
   }
 
   async VerifyCheckIn(call:any, callback:any){
+    try {
+      this.tableService = new TableService();
+      const verifycheckInRequest : VerifyCheckInRequest = {
+        requestId : call.request.requestId,
+      }
+  
+      const checkIn = await this.tableService.getRequest(verifycheckInRequest.requestId)
+      console.log(checkIn)
+      // const currentDate = new Date();
+      // const tenMinutesLater = new Date(checkIn.createdAt.getTime() + 10 * 60 * 1000); 
+      if (checkIn?.table.id){
+        const table : Table = await this.tableService.updateTable(checkIn?.table.id, {userId : checkIn.userId, status : TABLE_STATUS.FULL})
+        let verifyCheckInResponse : VerifyCheckInResponse = {
+          tableId : table.id,
+          status: table.status.toUpperCase()
+        }
+        await axios.put(`http://${config.user_service_host}:${config.user_service_port}/user/${table.userId}`, {
+          check_in_id : verifycheckInRequest.requestId,
+          is_active: true,
+          table_id: table.id
+        })
+        callback(null, verifyCheckInResponse)
+      }else{
+        callback({
+          code: grpc.status.NOT_FOUND,
+          details: "NOT Found"
+        })
+      }
+    } catch (err){
+      callback({
+        code: grpc.status.NOT_FOUND,
+        details: "NOT Found"
+      })
+    }
     this.tableService = new TableService();
     const verifycheckInRequest : VerifyCheckInRequest = {
       requestId : call.request.requestId,
@@ -138,7 +174,8 @@ export default class TableController {
     // const currentDate = new Date();
     // const tenMinutesLater = new Date(checkIn.createdAt.getTime() + 10 * 60 * 1000); 
     if (checkIn?.table.id){
-      const result = await this.tableService.updateTable(checkIn?.table.id, {userId : checkIn.userId, status : TABLE_STATUS.FULL})
+      await this.tableService.updateTable(checkIn?.table.id, {userId : checkIn.userId, status : TABLE_STATUS.FULL})
+      
       let verifyCheckInResponse : VerifyCheckInResponse = {
         tableId : checkIn?.table.id,
         status: String(TABLE_STATUS.FULL)
@@ -157,11 +194,17 @@ export default class TableController {
       tableId: call.request.tableId
     }
     try {
-      const result = await this.tableService.updateTable(checkOutRequest.tableId, {status: TABLE_STATUS.AVAILABLE})
+      const table = await this.tableService.getTable(checkOutRequest.tableId)
+      const result = await this.tableService.updateTable(checkOutRequest.tableId, {userId: "", status: TABLE_STATUS.AVAILABLE})
       let checkOutResponse: CheckOutResponse = {
         tableId : result.id ,
         status : String(result.status)
       }
+      await axios.put(`http://${config.user_service_host}:${config.user_service_port}/user/${table?.userId}`, {
+        check_in_id : null,
+        is_active: false,
+        table_id: null
+      })
       callback(null, checkOutResponse)
     }catch {
       callback({
